@@ -1,8 +1,5 @@
 # Jot MCP
 
-[![CI](https://github.com/veelenga/jot-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/veelenga/jot-mcp/actions/workflows/ci.yml)
-[![npm version](https://badge.fury.io/js/jot-mcp.svg)](https://www.npmjs.com/veelenga/jot-mcp)
-
 > Lightweight MCP server for maintaining coding context across sessions
 
 Never lose your mental state when switching branches, taking breaks, or context-switching between features. Jot lets you naturally log what you're doing and retrieve it later through conversation with Claude Code.
@@ -19,10 +16,15 @@ Never lose your mental state when switching branches, taking breaks, or context-
 
 ### Option 1: Plugin Install (Recommended)
 
-One-click installation in Claude Code:
+In Claude Code, first add the marketplace:
 
 ```bash
 /plugin marketplace add veelenga/jot-mcp
+```
+
+Then install the plugin:
+
+```bash
 /plugin install jot-mcp
 ```
 
