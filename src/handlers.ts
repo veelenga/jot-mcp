@@ -83,9 +83,16 @@ export class ToolHandlers {
    * Handle search jots
    */
   handleSearchJots(args: any): string {
+    // Resolve context name to ID if provided
+    let contextId: number | undefined;
+    if (args?.context) {
+      const context = this.service.getContext(args.context as string);
+      contextId = context?.id;
+    }
+
     const searchOptions = {
       query: args?.query as string | undefined,
-      contextId: args?.context as string | undefined,
+      contextId,
       tags: args?.tags as string[] | undefined,
       fromDate: args?.fromDate ? new Date(args.fromDate as string).getTime() : undefined,
       toDate: args?.toDate ? new Date(args.toDate as string).getTime() : undefined,
@@ -141,7 +148,8 @@ export class ToolHandlers {
       updates.metadata = args.metadata as Record<string, string>;
     }
 
-    const updated = this.service.updateJot(args.id as string, updates);
+    const id = typeof args.id === 'string' ? parseInt(args.id, 10) : (args.id as number);
+    const updated = this.service.updateJot(id, updates);
 
     if (!updated) {
       return `Jot not found: ${args.id}`;
@@ -165,8 +173,9 @@ export class ToolHandlers {
    * Handle delete jot
    */
   handleDeleteJot(args: any): string {
-    const deleted = this.service.deleteJot(args.id as string);
-    return deleted ? `Deleted jot: ${args.id}` : `Jot not found: ${args.id}`;
+    const id = typeof args.id === 'string' ? parseInt(args.id, 10) : (args.id as number);
+    const deleted = this.service.deleteJot(id);
+    return deleted ? `Deleted jot: ${id}` : `Jot not found: ${id}`;
   }
 
   /**

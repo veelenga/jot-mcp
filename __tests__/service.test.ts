@@ -3,9 +3,9 @@ import assert from 'node:assert';
 import { mkdtempSync, rmSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { initializeDatabase } from './database.js';
-import { JotRepository } from './repository.js';
-import { JotService } from './service.js';
+import { initializeDatabase } from '../src/database.js';
+import { JotRepository } from '../src/repository.js';
+import { JotService } from '../src/service.js';
 
 describe('JotService', () => {
   let testDir: string;
@@ -159,10 +159,10 @@ describe('JotService', () => {
     });
 
     it('should search with context filter', () => {
-      service.createJot({ message: 'msg1', contextName: 'context1' });
+      const jot1 = service.createJot({ message: 'msg1', contextName: 'context1' });
       service.createJot({ message: 'msg2', contextName: 'context2' });
 
-      const results = service.searchJots({ contextId: 'context1' });
+      const results = service.searchJots({ contextId: jot1.contextId });
 
       assert.strictEqual(results.length, 1);
     });
@@ -228,7 +228,7 @@ describe('JotService', () => {
     });
 
     it('should return null when updating non-existent jot', () => {
-      const updated = service.updateJot('non-existent-id', { message: 'test' });
+      const updated = service.updateJot(999, { message: 'test' });
 
       assert.strictEqual(updated, null);
     });

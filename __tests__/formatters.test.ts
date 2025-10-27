@@ -6,17 +6,18 @@ import {
   formatContextEntry,
   formatContextList,
   formatSearchCriteria,
-} from './formatters.js';
-import { JotEntry, Context } from './types.js';
+} from '../src/formatters.js';
+import { JotEntry, Context } from '../src/types.js';
 
 describe('Formatters', () => {
   describe('formatJotEntry', () => {
     it('should format a basic jot entry', () => {
       const jot: JotEntry = {
-        id: '1',
-        contextId: 'ctx1',
+        id: 1,
+        contextId: 1,
         message: 'Test message',
         createdAt: new Date('2025-10-27T12:00:00').getTime(),
+        updatedAt: new Date('2025-10-27T12:00:00').getTime(),
         expiresAt: Date.now() + 1000000,
         tags: [],
         metadata: {},
@@ -30,10 +31,11 @@ describe('Formatters', () => {
 
     it('should format jot with tags', () => {
       const jot: JotEntry = {
-        id: '1',
-        contextId: 'ctx1',
+        id: 1,
+        contextId: 1,
         message: 'Test message',
         createdAt: Date.now(),
+        updatedAt: Date.now(),
         expiresAt: null,
         tags: ['bug', 'urgent'],
         metadata: {},
@@ -47,10 +49,11 @@ describe('Formatters', () => {
 
     it('should format permanent jot', () => {
       const jot: JotEntry = {
-        id: '1',
-        contextId: 'ctx1',
+        id: 1,
+        contextId: 1,
         message: 'Permanent note',
         createdAt: Date.now(),
+        updatedAt: Date.now(),
         expiresAt: null,
         tags: [],
         metadata: {},
@@ -64,10 +67,11 @@ describe('Formatters', () => {
 
     it('should show context when requested', () => {
       const jot: JotEntry = {
-        id: '1',
-        contextId: 'ctx1',
+        id: 1,
+        contextId: 1,
         message: 'Test',
         createdAt: Date.now(),
+        updatedAt: Date.now(),
         expiresAt: null,
         tags: [],
         metadata: {},
@@ -90,19 +94,21 @@ describe('Formatters', () => {
     it('should format list with jots', () => {
       const jots: JotEntry[] = [
         {
-          id: '1',
-          contextId: 'ctx1',
+          id: 1,
+          contextId: 1,
           message: 'Message 1',
           createdAt: Date.now(),
+          updatedAt: Date.now(),
           expiresAt: null,
           tags: [],
           metadata: {},
         },
         {
-          id: '2',
-          contextId: 'ctx1',
+          id: 2,
+          contextId: 1,
           message: 'Message 2',
           createdAt: Date.now(),
+          updatedAt: Date.now(),
           expiresAt: null,
           tags: [],
           metadata: {},
@@ -119,10 +125,11 @@ describe('Formatters', () => {
     it('should use singular for single jot', () => {
       const jots: JotEntry[] = [
         {
-          id: '1',
-          contextId: 'ctx1',
+          id: 1,
+          contextId: 1,
           message: 'Message 1',
           createdAt: Date.now(),
+          updatedAt: Date.now(),
           expiresAt: null,
           tags: [],
           metadata: {},
@@ -139,12 +146,11 @@ describe('Formatters', () => {
   describe('formatContextEntry', () => {
     it('should format context entry', () => {
       const context: Context = {
-        id: '1',
+        id: 1,
         name: 'my-context',
         repository: 'my-repo',
-        branch: 'main',
         createdAt: Date.now(),
-        lastModifiedAt: Date.now(),
+        updatedAt: Date.now(),
         jotCount: 5,
       };
 
@@ -152,18 +158,16 @@ describe('Formatters', () => {
 
       assert.ok(formatted.includes('my-context'));
       assert.ok(formatted.includes('repo:my-repo'));
-      assert.ok(formatted.includes('branch:main'));
       assert.ok(formatted.includes('5j'));
     });
 
     it('should mark current context', () => {
       const context: Context = {
-        id: '1',
+        id: 1,
         name: 'my-context',
         repository: null,
-        branch: null,
         createdAt: Date.now(),
-        lastModifiedAt: Date.now(),
+        updatedAt: Date.now(),
         jotCount: 0,
       };
 
@@ -174,12 +178,11 @@ describe('Formatters', () => {
 
     it('should use singular for single jot', () => {
       const context: Context = {
-        id: '1',
+        id: 1,
         name: 'my-context',
         repository: null,
-        branch: null,
         createdAt: Date.now(),
-        lastModifiedAt: Date.now(),
+        updatedAt: Date.now(),
         jotCount: 1,
       };
 
@@ -199,21 +202,19 @@ describe('Formatters', () => {
     it('should format context list', () => {
       const contexts: Context[] = [
         {
-          id: '1',
+          id: 1,
           name: 'context1',
           repository: null,
-          branch: null,
           createdAt: Date.now(),
-          lastModifiedAt: Date.now(),
+          updatedAt: Date.now(),
           jotCount: 5,
         },
         {
-          id: '2',
+          id: 2,
           name: 'context2',
           repository: null,
-          branch: null,
           createdAt: Date.now(),
-          lastModifiedAt: Date.now(),
+          updatedAt: Date.now(),
           jotCount: 3,
         },
       ];

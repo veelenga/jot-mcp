@@ -10,59 +10,30 @@ export class JotRepository {
   constructor(private db: Database.Database) {}
 
   /**
-   * Generate a simple numeric ID by incrementing the counter
-   */
-  private generateNumericId(): string {
-    // Get all jots, filter numeric IDs, find max, and add 1
-    const jots = this.db.prepare('SELECT id FROM jots').all() as { id: string }[];
-    const numericIds = jots
-      .map(j => parseInt(j.id, 10))
-      .filter(id => !isNaN(id));
-
-    const maxId = numericIds.length > 0 ? Math.max(...numericIds) : 0;
-    return (maxId + 1).toString();
-  }
-
-  /**
-   * Generate a simple numeric context ID
-   */
-  private generateContextId(): string {
-    // Get all contexts, filter numeric IDs, find max, and add 1
-    const contexts = this.db.prepare('SELECT id FROM contexts').all() as { id: string }[];
-    const numericIds = contexts
-      .map(c => parseInt(c.id, 10))
-      .filter(id => !isNaN(id));
-
-    const maxId = numericIds.length > 0 ? Math.max(...numericIds) : 0;
-    return (maxId + 1).toString();
-  }
-
-  /**
    * Create or get a context by name
    */
-  upsertContext(name: string, repository?: string, branch?: string): Context {
+  upsertContext(name: string, repository?: string): Context {
     const existing = this.getContextByName(name);
     if (existing) {
       return existing;
     }
 
-    const id = this.generateContextId();
     const now = Date.now();
 
-    this.db
+    const result = this.db
       .prepare(
-        `INSERT INTO contexts (id, name, repository, branch, created_at, last_modified_at)
-         VALUES (?, ?, ?, ?, ?, ?)`
+        `INSERT INTO contexts (name, repository, created_at, updated_at)
+         VALUES (?, ?, ?, ?)`
       )
-      .run(id, name, repository || null, branch || null, now, now);
+      .run(name, repository || null, now, now);
 
-    return this.getContext(id)!;
+    return this.getContext(result.lastInsertRowid as number)!;
   }
 
   /**
    * Get context by ID
    */
-  getContext(id: string): Context | null {
+  getContext(id: number): Context | null {
     const row = this.db
       .prepare(
         `SELECT c.*, COUNT(j.id) as jot_count
@@ -103,7 +74,7 @@ export class JotRepository {
          FROM contexts c
          LEFT JOIN jots j ON j.context_id = c.id
          GROUP BY c.id
-         ORDER BY c.last_modified_at DESC`
+         ORDER BY c.updated_at DESC`
       )
       .all() as any[];
 
@@ -113,7 +84,7 @@ export class JotRepository {
   /**
    * Delete a context and all its jots
    */
-  deleteContext(id: string): boolean {
+  deleteContext(id: number): boolean {
     const result = this.db.prepare('DELETE FROM contexts WHERE id = ?').run(id);
     return result.changes > 0;
   }
@@ -122,22 +93,23 @@ export class JotRepository {
    * Create a jot entry
    */
   createJot(
-    contextId: string,
+    contextId: number,
     message: string,
     expiresAt: number | null,
     tags: string[],
     metadata: Record<string, string>
   ): JotEntry {
-    const id = this.generateNumericId();
     const now = Date.now();
 
     // Insert jot
-    this.db
+    const result = this.db
       .prepare(
-        `INSERT INTO jots (id, context_id, message, created_at, expires_at)
+        `INSERT INTO jots (context_id, message, created_at, updated_at, expires_at)
          VALUES (?, ?, ?, ?, ?)`
       )
-      .run(id, contextId, message, now, expiresAt);
+      .run(contextId, message, now, now, expiresAt);
+
+    const id = result.lastInsertRowid as number;
 
     // Insert tags
     const insertTag = this.db.prepare('INSERT INTO tags (jot_id, tag) VALUES (?, ?)');
@@ -151,9 +123,9 @@ export class JotRepository {
       insertMeta.run(id, key, value);
     }
 
-    // Update context's last modified time
+    // Update context's updated time
     this.db
-      .prepare('UPDATE contexts SET last_modified_at = ? WHERE id = ?')
+      .prepare('UPDATE contexts SET updated_at = ? WHERE id = ?')
       .run(now, contextId);
 
     return this.getJot(id)!;
@@ -163,7 +135,7 @@ export class JotRepository {
    * Update a jot entry
    */
   updateJot(
-    id: string,
+    id: number,
     updates: {
       message?: string;
       expiresAt?: number | null;
@@ -182,8 +154,8 @@ export class JotRepository {
       const expiresAt = updates.expiresAt !== undefined ? updates.expiresAt : existing.expiresAt;
 
       this.db
-        .prepare('UPDATE jots SET message = ?, expires_at = ? WHERE id = ?')
-        .run(message, expiresAt, id);
+        .prepare('UPDATE jots SET message = ?, expires_at = ?, updated_at = ? WHERE id = ?')
+        .run(message, expiresAt, now, id);
     }
 
     // Update tags if provided
@@ -210,9 +182,9 @@ export class JotRepository {
       }
     }
 
-    // Update context's last modified time
+    // Update context's updated time
     this.db
-      .prepare('UPDATE contexts SET last_modified_at = ? WHERE id = ?')
+      .prepare('UPDATE contexts SET updated_at = ? WHERE id = ?')
       .run(now, existing.contextId);
 
     return this.getJot(id);
@@ -221,10 +193,10 @@ export class JotRepository {
   /**
    * Get a jot by ID
    */
-  getJot(id: string): JotEntry | null {
+  getJot(id: number): JotEntry | null {
     const row = this.db
       .prepare(
-        `SELECT id, context_id, message, created_at, expires_at
+        `SELECT id, context_id, message, created_at, updated_at, expires_at
          FROM jots
          WHERE id = ?`
       )
@@ -239,7 +211,7 @@ export class JotRepository {
    * Search jots with various filters
    */
   searchJots(options: SearchOptions = {}): JotEntry[] {
-    let query = `SELECT DISTINCT j.id, j.context_id, j.message, j.created_at, j.expires_at FROM jots j`;
+    let query = `SELECT DISTINCT j.id, j.context_id, j.message, j.created_at, j.updated_at, j.expires_at FROM jots j`;
     const conditions: string[] = [];
     const params: any[] = [];
 
@@ -251,7 +223,7 @@ export class JotRepository {
 
     // Full-text search
     if (options.query) {
-      query = `SELECT DISTINCT j.id, j.context_id, j.message, j.created_at, j.expires_at
+      query = `SELECT DISTINCT j.id, j.context_id, j.message, j.created_at, j.updated_at, j.expires_at
                FROM jots j
                JOIN jots_fts fts ON j.rowid = fts.rowid`;
       conditions.push('jots_fts MATCH ?');
@@ -300,7 +272,7 @@ export class JotRepository {
   /**
    * Delete a jot
    */
-  deleteJot(id: string): boolean {
+  deleteJot(id: number): boolean {
     const result = this.db.prepare('DELETE FROM jots WHERE id = ?').run(id);
     return result.changes > 0;
   }
@@ -325,7 +297,7 @@ export class JotRepository {
 
     const rows = this.db
       .prepare(
-        `SELECT id, context_id, message, created_at, expires_at
+        `SELECT id, context_id, message, created_at, updated_at, expires_at
          FROM jots
          WHERE expires_at IS NOT NULL
            AND expires_at > ?
@@ -344,9 +316,8 @@ export class JotRepository {
       id: row.id,
       name: row.name,
       repository: row.repository,
-      branch: row.branch,
       createdAt: row.created_at,
-      lastModifiedAt: row.last_modified_at,
+      updatedAt: row.updated_at,
       jotCount: row.jot_count || 0,
     };
   }
@@ -372,6 +343,7 @@ export class JotRepository {
       contextId: row.context_id,
       message: row.message,
       createdAt: row.created_at,
+      updatedAt: row.updated_at,
       expiresAt: row.expires_at,
       tags,
       metadata,

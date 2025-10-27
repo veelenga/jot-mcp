@@ -3,7 +3,7 @@ import assert from 'node:assert';
 import { mkdtempSync, rmSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { initializeDatabase } from './database.js';
+import { initializeDatabase } from '../src/database.js';
 
 describe('Database', () => {
   let testDir: string;

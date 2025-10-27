@@ -25,22 +25,22 @@ function createSchema(db: Database.Database): void {
   // Contexts table
   db.exec(`
     CREATE TABLE IF NOT EXISTS contexts (
-      id TEXT PRIMARY KEY,
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL UNIQUE,
       repository TEXT,
-      branch TEXT,
       created_at INTEGER NOT NULL,
-      last_modified_at INTEGER NOT NULL
+      updated_at INTEGER NOT NULL
     )
   `);
 
   // Jots table
   db.exec(`
     CREATE TABLE IF NOT EXISTS jots (
-      id TEXT PRIMARY KEY,
-      context_id TEXT NOT NULL,
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      context_id INTEGER NOT NULL,
       message TEXT NOT NULL,
       created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL,
       expires_at INTEGER,
       FOREIGN KEY (context_id) REFERENCES contexts(id) ON DELETE CASCADE
     )
@@ -50,7 +50,7 @@ function createSchema(db: Database.Database): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS tags (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      jot_id TEXT NOT NULL,
+      jot_id INTEGER NOT NULL,
       tag TEXT NOT NULL,
       FOREIGN KEY (jot_id) REFERENCES jots(id) ON DELETE CASCADE,
       UNIQUE(jot_id, tag)
@@ -61,7 +61,7 @@ function createSchema(db: Database.Database): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS metadata (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      jot_id TEXT NOT NULL,
+      jot_id INTEGER NOT NULL,
       key TEXT NOT NULL,
       value TEXT NOT NULL,
       FOREIGN KEY (jot_id) REFERENCES jots(id) ON DELETE CASCADE,
@@ -71,11 +71,11 @@ function createSchema(db: Database.Database): void {
 
   // Create indexes for common queries
   db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_contexts_updated_at ON contexts(updated_at);
     CREATE INDEX IF NOT EXISTS idx_jots_context_id ON jots(context_id);
     CREATE INDEX IF NOT EXISTS idx_jots_created_at ON jots(created_at);
     CREATE INDEX IF NOT EXISTS idx_jots_expires_at ON jots(expires_at);
     CREATE INDEX IF NOT EXISTS idx_tags_tag ON tags(tag);
-    CREATE INDEX IF NOT EXISTS idx_tags_jot_id ON tags(jot_id);
   `);
 
   // Create full-text search virtual table

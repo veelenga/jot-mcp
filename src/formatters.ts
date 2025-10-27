@@ -43,7 +43,7 @@ export function formatJotList(
   jots: JotEntry[],
   headerText: string,
   showContext: boolean,
-  getContextName: (contextId: string) => string | undefined
+  getContextName: (contextId: number) => string | undefined
 ): string {
   if (jots.length === 0) {
     return `${headerText}\nNo jots.`;
@@ -66,7 +66,7 @@ export function formatContextEntry(
   _index: number,
   isCurrent: boolean
 ): string {
-  const lastMod = new Date(context.lastModifiedAt).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
+  const updated = new Date(context.updatedAt).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
   const currentMarker = isCurrent ? ' *' : '';
 
   // Build compact metadata
@@ -74,11 +74,8 @@ export function formatContextEntry(
   if (context.repository) {
     metadata.push(`repo:${context.repository}`);
   }
-  if (context.branch) {
-    metadata.push(`branch:${context.branch}`);
-  }
   metadata.push(`${context.jotCount}j`);
-  metadata.push(`updated:${lastMod}`);
+  metadata.push(`updated:${updated}`);
 
   return `${context.name}${currentMarker}\n   ${metadata.join(' | ')}`;
 }

@@ -3,27 +3,27 @@
  */
 
 export interface JotEntry {
-  id: string;
-  contextId: string;
+  id: number;
+  contextId: number;
   message: string;
   createdAt: number; // Unix timestamp
+  updatedAt: number; // Unix timestamp (not exposed via MCP yet)
   expiresAt: number | null; // Unix timestamp, null for permanent jots
   tags: string[];
   metadata: Record<string, string>;
 }
 
 export interface Context {
-  id: string;
+  id: number;
   name: string;
   repository: string | null;
-  branch: string | null;
   createdAt: number;
-  lastModifiedAt: number;
+  updatedAt: number;
   jotCount: number;
 }
 
 export interface SearchOptions {
-  contextId?: string;
+  contextId?: number;
   query?: string;
   tags?: string[];
   fromDate?: number;
@@ -34,7 +34,7 @@ export interface SearchOptions {
 
 export interface CreateJotOptions {
   message: string;
-  contextId?: string;
+  contextId?: number;
   contextName?: string;
   ttlDays?: number; // null or 0 means permanent
   tags?: string[];

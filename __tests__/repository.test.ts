@@ -3,8 +3,8 @@ import assert from 'node:assert';
 import { mkdtempSync, rmSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { initializeDatabase } from './database.js';
-import { JotRepository } from './repository.js';
+import { initializeDatabase } from '../src/database.js';
+import { JotRepository } from '../src/repository.js';
 
 describe('JotRepository', () => {
   let testDir: string;
@@ -32,23 +32,21 @@ describe('JotRepository', () => {
 
   describe('Context Management', () => {
     it('should create a new context', () => {
-      const context = repository.upsertContext('test-context', 'test-repo', 'main');
+      const context = repository.upsertContext('test-context', 'test-repo');
 
       assert.ok(context.id, 'should have an id');
       assert.strictEqual(context.name, 'test-context');
       assert.strictEqual(context.repository, 'test-repo');
-      assert.strictEqual(context.branch, 'main');
       assert.strictEqual(context.jotCount, 0);
     });
 
     it('should reuse existing context', () => {
-      const context1 = repository.upsertContext('test-context', 'repo1', 'main');
-      const context2 = repository.upsertContext('test-context', 'repo2', 'dev');
+      const context1 = repository.upsertContext('test-context', 'repo1');
+      const context2 = repository.upsertContext('test-context', 'repo2');
 
       assert.strictEqual(context1.id, context2.id, 'should have same id');
       // upsert doesn't update, just returns existing
       assert.strictEqual(context2.repository, 'repo1', 'should keep original repository');
-      assert.strictEqual(context2.branch, 'main', 'should keep original branch');
     });
 
     it('should get context by id', () => {
@@ -90,7 +88,7 @@ describe('JotRepository', () => {
   });
 
   describe('Jot Management', () => {
-    let contextId: string;
+    let contextId: number;
 
     beforeEach(() => {
       const context = repository.upsertContext('test-context');
@@ -209,7 +207,7 @@ describe('JotRepository', () => {
     });
 
     it('should return null when updating non-existent jot', () => {
-      const updated = repository.updateJot('non-existent-id', { message: 'test' });
+      const updated = repository.updateJot(999, { message: 'test' });
 
       assert.strictEqual(updated, null);
     });
@@ -225,7 +223,7 @@ describe('JotRepository', () => {
   });
 
   describe('Search', () => {
-    let contextId: string;
+    let contextId: number;
 
     beforeEach(() => {
       const context = repository.upsertContext('test-context');
@@ -314,7 +312,7 @@ describe('JotRepository', () => {
   });
 
   describe('Expiration', () => {
-    let contextId: string;
+    let contextId: number;
 
     beforeEach(() => {
       const context = repository.upsertContext('test-context');

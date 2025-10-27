@@ -61,19 +61,20 @@ export class JotService {
   /**
    * Get a specific context
    */
-  getContext(idOrName: string): Context | null {
-    // Try ID first
-    let context = this.repository.getContext(idOrName);
-    if (context) return context;
+  getContext(idOrName: number | string): Context | null {
+    // If it's a number, get by ID
+    if (typeof idOrName === 'number') {
+      return this.repository.getContext(idOrName);
+    }
 
-    // Try name
+    // Otherwise get by name
     return this.repository.getContextByName(idOrName);
   }
 
   /**
    * Delete a context and all its jots
    */
-  deleteContext(idOrName: string): boolean {
+  deleteContext(idOrName: number | string): boolean {
     const context = this.getContext(idOrName);
     if (!context) return false;
     return this.repository.deleteContext(context.id);
@@ -83,14 +84,6 @@ export class JotService {
    * Search jots
    */
   searchJots(options: SearchOptions): JotEntry[] {
-    // If context name provided instead of ID, resolve it
-    if (options.contextId) {
-      const context = this.getContext(options.contextId);
-      if (context) {
-        options.contextId = context.id;
-      }
-    }
-
     return this.repository.searchJots(options);
   }
 
@@ -114,7 +107,7 @@ export class JotService {
    * Update a specific jot
    */
   updateJot(
-    id: string,
+    id: number,
     updates: {
       message?: string;
       ttlDays?: number | null;
@@ -149,7 +142,7 @@ export class JotService {
   /**
    * Delete a specific jot
    */
-  deleteJot(id: string): boolean {
+  deleteJot(id: number): boolean {
     return this.repository.deleteJot(id);
   }
 

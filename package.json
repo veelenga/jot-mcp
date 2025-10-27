@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "description": "Lightweight MCP server for maintaining coding context across sessions",
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
   "bin": {
-    "jot-mcp": "dist/index.js"
+    "jot-mcp": "dist/src/index.js"
   },
   "files": [
     "dist/**/*",
@@ -15,8 +15,8 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch",
-    "dev": "npm run build && node dist/index.js",
-    "test": "node --test dist/*.test.js",
+    "dev": "npm run build && node dist/src/index.js",
+    "test": "node --test dist/__tests__/*.test.js",
     "prepublishOnly": "npm run build"
   },
   "keywords": [

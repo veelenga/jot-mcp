@@ -398,8 +398,15 @@ server.setRequestHandler(GetPromptRequestSchema, async (request) => {
       const days = typeof args?.days === 'number' ? args.days : 7;
       const fromDate = Date.now() - days * 24 * 60 * 60 * 1000;
 
+      // Resolve context name to ID if provided
+      let contextId: number | undefined;
+      if (contextName) {
+        const context = service.getContext(contextName);
+        contextId = context?.id;
+      }
+
       const jots = service.searchJots({
-        contextId: contextName,
+        contextId,
         fromDate,
       });
 
