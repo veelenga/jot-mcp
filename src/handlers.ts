@@ -11,13 +11,56 @@ import {
   formatSearchCriteria,
 } from './formatters.js';
 
+/**
+ * Operation constants
+ */
+const JotOperations = {
+  CREATE: 'create',
+  UPDATE: 'update',
+  DELETE: 'delete',
+} as const;
+
+const ContextOperations = {
+  LIST: 'list',
+  DELETE: 'delete',
+} as const;
+
+/**
+ * Format expiry date for display
+ */
+function formatExpiryDate(timestamp: number): string {
+  return new Date(timestamp).toLocaleDateString('en-US', {
+    month: 'numeric',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
 export class ToolHandlers {
   constructor(private service: JotService) {}
 
   /**
-   * Handle jot creation
+   * Handle jot CRUD operations
    */
   handleJot(args: any): string {
+    const operation = args.operation as string;
+
+    switch (operation) {
+      case JotOperations.CREATE:
+        return this.handleJotCreate(args);
+      case JotOperations.UPDATE:
+        return this.handleJotUpdate(args);
+      case JotOperations.DELETE:
+        return this.handleJotDelete(args);
+      default:
+        throw new Error(`Unknown operation: ${operation}`);
+    }
+  }
+
+  /**
+   * Handle jot creation
+   */
+  private handleJotCreate(args: any): string {
     const jot = this.service.createJot({
       message: args.message as string,
       contextName: args.contextName as string | undefined,
@@ -27,26 +70,72 @@ export class ToolHandlers {
     });
 
     const context = this.service.getContext(jot.contextId);
-    const expiryInfo = jot.expiresAt
-      ? `exp:${new Date(jot.expiresAt).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })}`
-      : 'permanent';
+    const expiryInfo = jot.expiresAt ? `exp:${formatExpiryDate(jot.expiresAt)}` : 'permanent';
 
     return `Jotted to: ${context?.name}\nID:${jot.id} | ${expiryInfo}${jot.tags.length > 0 ? ` | tags:${jot.tags.join(',')}` : ''}`;
   }
 
   /**
+   * Handle context operations
+   */
+  handleContext(args: any): string {
+    const operation = args.operation as string;
+
+    switch (operation) {
+      case ContextOperations.LIST:
+        return this.handleContextList();
+      case ContextOperations.DELETE:
+        return this.handleContextDelete(args);
+      default:
+        throw new Error(`Unknown operation: ${operation}`);
+    }
+  }
+
+  /**
    * Handle list contexts
    */
-  handleListContexts(): string {
+  private handleContextList(): string {
+    // Cleanup expired jots automatically (async, non-blocking)
+    setImmediate(() => this.service.cleanupExpired());
+
     const contexts = this.service.listContexts();
     const currentContext = this.service.detectCurrentContext();
     return formatContextList(contexts, currentContext);
   }
 
   /**
-   * Handle list jots
+   * Handle delete context
+   */
+  private handleContextDelete(args: any): string {
+    const deleted = this.service.deleteContext(args.context as string);
+    return deleted
+      ? `Deleted context: ${args.context}`
+      : `Context not found: ${args.context}`;
+  }
+
+  /**
+   * Handle list/search jots (unified)
    */
   handleListJots(args: any): string {
+    // Cleanup expired jots automatically (async, non-blocking)
+    setImmediate(() => this.service.cleanupExpired());
+
+    // Check if this is a search (has search filters) or simple list
+    const hasSearchFilters = args?.query || args?.tags || args?.fromDate || args?.toDate;
+
+    if (hasSearchFilters) {
+      // Search mode
+      return this.handleJotsSearch(args);
+    } else {
+      // Simple list mode
+      return this.handleJotsList(args);
+    }
+  }
+
+  /**
+   * Handle simple jots list
+   */
+  private handleJotsList(args: any): string {
     let jots: JotEntry[];
     let headerText: string;
     let showContext = false;
@@ -80,9 +169,9 @@ export class ToolHandlers {
   }
 
   /**
-   * Handle search jots
+   * Handle jots search with filters
    */
-  handleSearchJots(args: any): string {
+  private handleJotsSearch(args: any): string {
     // Resolve context name to ID if provided
     let contextId: number | undefined;
     if (args?.context) {
@@ -115,19 +204,9 @@ export class ToolHandlers {
   }
 
   /**
-   * Handle delete context
+   * Handle jot update
    */
-  handleDeleteContext(args: any): string {
-    const deleted = this.service.deleteContext(args.context as string);
-    return deleted
-      ? `Deleted context: ${args.context}`
-      : `Context not found: ${args.context}`;
-  }
-
-  /**
-   * Handle update jot
-   */
-  handleUpdateJot(args: any): string {
+  private handleJotUpdate(args: any): string {
     const updates: {
       message?: string;
       ttlDays?: number | null;
@@ -156,9 +235,7 @@ export class ToolHandlers {
     }
 
     const context = this.service.getContext(updated.contextId);
-    const expiryInfo = updated.expiresAt
-      ? `exp:${new Date(updated.expiresAt).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })}`
-      : 'permanent';
+    const expiryInfo = updated.expiresAt ? `exp:${formatExpiryDate(updated.expiresAt)}` : 'permanent';
 
     const changesSummary: string[] = [];
     if (args.message !== undefined) changesSummary.push('msg');
@@ -170,19 +247,11 @@ export class ToolHandlers {
   }
 
   /**
-   * Handle delete jot
+   * Handle jot deletion
    */
-  handleDeleteJot(args: any): string {
+  private handleJotDelete(args: any): string {
     const id = typeof args.id === 'string' ? parseInt(args.id, 10) : (args.id as number);
     const deleted = this.service.deleteJot(id);
     return deleted ? `Deleted jot: ${id}` : `Jot not found: ${id}`;
-  }
-
-  /**
-   * Handle cleanup expired jots
-   */
-  handleCleanupExpired(): string {
-    const count = this.service.cleanupExpired();
-    return `Cleaned up ${count} jot${count !== 1 ? 's' : ''}`;
   }
 }

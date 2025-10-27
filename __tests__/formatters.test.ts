@@ -65,6 +65,26 @@ describe('Formatters', () => {
       assert.ok(formatted.includes('permanent'));
     });
 
+    it('should format jot with expiration date', () => {
+      const expiresAt = new Date('2025-12-31T23:59:59').getTime();
+      const jot: JotEntry = {
+        id: 1,
+        contextId: 1,
+        message: 'Expiring note',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        expiresAt,
+        tags: [],
+        metadata: {},
+      };
+
+      const formatted = formatJotEntry(jot, 0, false);
+
+      assert.ok(formatted.includes('[1]'));
+      assert.ok(formatted.includes('expires:'));
+      assert.ok(formatted.includes('12/31/2025'));
+    });
+
     it('should show context when requested', () => {
       const jot: JotEntry = {
         id: 1,

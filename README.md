@@ -54,16 +54,15 @@ Talk naturally with Claude Code:
 
 ## MCP Tools
 
-| Tool | Description |
-|------|-------------|
-| `jot` | Create a jot (auto-detects context from git) |
-| `update_jot` | Update message, tags, metadata, or TTL |
-| `delete_jot` | Delete a jot by ID |
-| `list_jots` | List jots (current context or all) |
-| `search_jots` | Search by keyword, tag, date |
-| `list_contexts` | Show all contexts |
-| `delete_context` | Remove a context and its jots |
-| `cleanup_expired` | Remove expired jots |
+Jot MCP provides just 3 tools for maximum token efficiency:
+
+| Tool | Operations | Description |
+|------|-----------|-------------|
+| `jot` | create, update, delete | Create, update, or delete jots (auto-detects context from git) |
+| `list_jots` | - | List or search jots with optional filters (query, tags, dates) |
+| `context` | list, delete | List all contexts or delete a specific context |
+
+**Note:** Expired jots are automatically cleaned up in the background during list/search operations.
 
 ## Storage
 
@@ -91,7 +90,7 @@ claude mcp list            # Verify configuration
 ```bash
 npm install       # Install dependencies
 npm run build     # Build the project
-npm test          # Run tests (75 tests covering all layers)
+npm test          # Run tests (76 tests covering all layers)
 npm run watch     # Watch mode for development
 ```
 

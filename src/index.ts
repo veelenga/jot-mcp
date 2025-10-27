@@ -51,22 +51,30 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     tools: [
       {
         name: 'jot',
-        description:
-          'Save notes to persistent context. Auto-detects context from git. Use ttlDays=0 for permanent jots.',
+        description: 'Create, update, or delete jots',
         inputSchema: {
           type: 'object',
           properties: {
+            operation: {
+              type: 'string',
+              enum: ['create', 'update', 'delete'],
+              description: 'create/update/delete',
+            },
+            id: {
+              type: 'string',
+              description: 'Jot ID',
+            },
             message: {
               type: 'string',
               description: 'Note content',
             },
             contextName: {
               type: 'string',
-              description: 'Context name (optional)',
+              description: 'Context name',
             },
             ttlDays: {
               type: 'number',
-              description: 'Days until expiration (default: 14, 0 = permanent)',
+              description: 'Days until expiration (0 = permanent)',
             },
             tags: {
               type: 'array',
@@ -75,50 +83,25 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
             metadata: {
               type: 'object',
-              description: 'Additional metadata',
+              description: 'Metadata',
             },
           },
-          required: ['message'],
-        },
-      },
-      {
-        name: 'list_contexts',
-        description: 'List all contexts with metadata and jot counts.',
-        inputSchema: {
-          type: 'object',
-          properties: {},
+          required: ['operation'],
         },
       },
       {
         name: 'list_jots',
-        description: 'List jots. Defaults to current context. Use "*" for all contexts.',
+        description: 'List/search jots with filters',
         inputSchema: {
           type: 'object',
           properties: {
             context: {
               type: 'string',
-              description: 'Context name or "*" for all (default: current)',
+              description: 'Context ("*" = all)',
             },
-            limit: {
-              type: 'number',
-              description: 'Max results',
-            },
-          },
-        },
-      },
-      {
-        name: 'search_jots',
-        description: 'Search jots with filters.',
-        inputSchema: {
-          type: 'object',
-          properties: {
             query: {
               type: 'string',
               description: 'Search query',
-            },
-            context: {
-              type: 'string',
-              description: 'Filter by context',
             },
             tags: {
               type: 'array',
@@ -145,70 +128,22 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
-        name: 'delete_context',
-        description: 'Delete a context and all its jots.',
+        name: 'context',
+        description: 'List or delete contexts',
         inputSchema: {
           type: 'object',
           properties: {
+            operation: {
+              type: 'string',
+              enum: ['list', 'delete'],
+              description: 'list/delete',
+            },
             context: {
               type: 'string',
               description: 'Context name',
             },
           },
-          required: ['context'],
-        },
-      },
-      {
-        name: 'update_jot',
-        description: 'Update a jot by ID. Can update message, tags, metadata, or TTL.',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            id: {
-              type: 'string',
-              description: 'Jot ID',
-            },
-            message: {
-              type: 'string',
-              description: 'New message content (optional)',
-            },
-            ttlDays: {
-              type: 'number',
-              description: 'New TTL in days (optional, 0 = permanent)',
-            },
-            tags: {
-              type: 'array',
-              items: { type: 'string' },
-              description: 'New tags (optional, replaces existing)',
-            },
-            metadata: {
-              type: 'object',
-              description: 'New metadata (optional, replaces existing)',
-            },
-          },
-          required: ['id'],
-        },
-      },
-      {
-        name: 'delete_jot',
-        description: 'Delete a jot by ID.',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            id: {
-              type: 'string',
-              description: 'Jot ID',
-            },
-          },
-          required: ['id'],
-        },
-      },
-      {
-        name: 'cleanup_expired',
-        description: 'Remove expired jots.',
-        inputSchema: {
-          type: 'object',
-          properties: {},
+          required: ['operation'],
         },
       },
     ],
@@ -228,26 +163,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'jot':
         responseText = handlers.handleJot(args);
         break;
-      case 'list_contexts':
-        responseText = handlers.handleListContexts();
-        break;
       case 'list_jots':
         responseText = handlers.handleListJots(args);
         break;
-      case 'search_jots':
-        responseText = handlers.handleSearchJots(args);
-        break;
-      case 'delete_context':
-        responseText = handlers.handleDeleteContext(args);
-        break;
-      case 'update_jot':
-        responseText = handlers.handleUpdateJot(args);
-        break;
-      case 'delete_jot':
-        responseText = handlers.handleDeleteJot(args);
-        break;
-      case 'cleanup_expired':
-        responseText = handlers.handleCleanupExpired();
+      case 'context':
+        responseText = handlers.handleContext(args);
         break;
       default:
         throw new Error(`Unknown tool: ${name}`);
@@ -276,12 +196,15 @@ server.setRequestHandler(ListResourcesRequestSchema, async () => {
   const contexts = service.listContexts();
 
   return {
-    resources: contexts.map((context) => ({
-      uri: `jot://context/${context.name}`,
-      name: `Jots for ${context.name}`,
-      description: `${context.jotCount} jots in this context`,
-      mimeType: 'text/plain',
-    })),
+    resources: contexts.map((context) => {
+      const encodedName = encodeURIComponent(context.name);
+      return {
+        uri: `jot://context/${encodedName}`,
+        name: `Jots for ${context.name}`,
+        description: `${context.jotCount} jots in this context`,
+        mimeType: 'text/plain',
+      };
+    }),
   };
 });
 
@@ -292,7 +215,13 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
     throw new Error('Invalid resource URI');
   }
 
-  const contextName = uri.replace('jot://context/', '');
+  const encodedName = uri.slice('jot://context/'.length);
+  let contextName: string;
+  try {
+    contextName = decodeURIComponent(encodedName);
+  } catch {
+    throw new Error('Invalid resource URI');
+  }
   const jots = service.getContextJots(contextName);
 
   const content = jots
@@ -325,37 +254,17 @@ server.setRequestHandler(ListPromptsRequestSchema, async () => {
     prompts: [
       {
         name: 'resume_work',
-        description:
-          'Load context from recent jots to resume work. Use when user says: "resume work", "what was I working on", "continue where I left off", "load context".',
-        arguments: [
-          {
-            name: 'context',
-            description: 'Context name (optional, uses auto-detected if not provided)',
-            required: false,
-          },
-        ],
+        description: 'Load recent jots to resume work (last 5)',
+        arguments: [],
       },
       {
         name: 'summarize_progress',
-        description:
-          'Summarize progress across all contexts or a specific one. Use when user says: "summarize progress", "what did I do", "show my progress", "recap my work".',
-        arguments: [
-          {
-            name: 'context',
-            description: 'Context name (optional, summarizes all if not provided)',
-            required: false,
-          },
-          {
-            name: 'days',
-            description: 'Number of days to look back (default: 7)',
-            required: false,
-          },
-        ],
+        description: 'Summarize progress across all contexts (last 7 days)',
+        arguments: [],
       },
       {
         name: 'what_was_i_doing',
-        description:
-          'Quick recap of recent work and next steps. Use when user asks: "what was I doing", "remind me what I was working on", "where did I leave off".',
+        description: 'Quick recap of recent work and suggested next steps',
         arguments: [],
       },
     ],
@@ -368,9 +277,10 @@ server.setRequestHandler(GetPromptRequestSchema, async (request) => {
   switch (name) {
     case 'resume_work': {
       const contextName = args?.context as string | undefined;
+      const limit = typeof args?.limit === 'number' ? args.limit : 5;
       const jots = contextName
-        ? service.getContextJots(contextName, 20)
-        : service.searchJots({ limit: 20 });
+        ? service.getContextJots(contextName, limit)
+        : service.searchJots({ limit });
 
       const jotList = jots
         .map((j) => {
