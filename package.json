@@ -1,0 +1,55 @@
+{
+  "name": "jot-mcp",
+  "version": "0.1.0",
+  "description": "Lightweight MCP server for maintaining coding context across sessions",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "jot-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "dev": "npm run build && node dist/index.js",
+    "test": "node --test dist/**/*.test.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "context",
+    "memory",
+    "jot",
+    "notes",
+    "claude",
+    "claude-code",
+    "developer-tools",
+    "productivity"
+  ],
+  "author": "veelenga",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/veelenga/jot-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/veelenga/jot-mcp/issues"
+  },
+  "homepage": "https://github.com/veelenga/jot-mcp#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "better-sqlite3": "^11.7.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}

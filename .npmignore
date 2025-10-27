@@ -1,0 +1,25 @@
+# Source files
+src/
+tsconfig.json
+
+# Development files
+.claude/
+node_modules/
+*.log
+PUBLISHING.md
+
+# Build artifacts
+*.map
+
+# Git
+.git/
+.gitignore
+
+# Tests
+*.test.js
+*.test.ts
+
+# Misc
+.DS_Store
+*.sqlite
+*.sqlite-*
