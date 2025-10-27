@@ -62,7 +62,7 @@ export function formatJotList(
 
   const summary = `${jots.length} jot${jots.length !== 1 ? 's' : ''} in ${headerText.toLowerCase().replace(/^📍 current context: |^📁 context: |^📚 /, '')}`;
 
-  return `${headerText}\n${lines.join('\n')}\n\n${summary}`;
+  return `${headerText}\n${lines.join('\n\n')}\n\n${summary}`;
 }
 
 /**

@@ -52,30 +52,30 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: 'jot',
         description:
-          'Save important information, thoughts, or progress notes to persistent context. Use this when the user says things like: "jot:", "remember this", "save this", "jot this down", "add this to jots", "this is important", "track this", etc. Auto-detects context from git repo/branch. Mark as permanent (ttlDays=0) when user says "important", "don\'t forget", "permanently", "always remember".',
+          'Save notes to persistent context. Auto-detects context from git. Use ttlDays=0 for permanent jots.',
         inputSchema: {
           type: 'object',
           properties: {
             message: {
               type: 'string',
-              description: 'The information to save (condense if verbose, keep 1-3 sentences)',
+              description: 'Note content',
             },
             contextName: {
               type: 'string',
-              description: 'Context name (optional, auto-detects from git if not provided)',
+              description: 'Context name (optional)',
             },
             ttlDays: {
               type: 'number',
-              description: 'Time to live in days (default: 14, use 0 for permanent/important jots)',
+              description: 'Days until expiration (default: 14, 0 = permanent)',
             },
             tags: {
               type: 'array',
               items: { type: 'string' },
-              description: 'Tags for categorization (extract from context: bug, feature, docs, etc.)',
+              description: 'Tags',
             },
             metadata: {
               type: 'object',
-              description: 'Additional metadata key-value pairs (e.g., links, references)',
+              description: 'Additional metadata',
             },
           },
           required: ['message'],
@@ -83,8 +83,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: 'list_contexts',
-        description:
-          'List all contexts with their metadata and jot counts. Use when user asks: "what contexts do I have", "show my contexts", "list contexts", "what projects am I tracking".',
+        description: 'List all contexts with metadata and jot counts.',
         inputSchema: {
           type: 'object',
           properties: {},
@@ -92,71 +91,68 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: 'list_jots',
-        description:
-          'List jots for a specific context. IMPORTANT: By default, show jots for the CURRENT context (auto-detected from git). Only show ALL contexts if user explicitly asks for "all jots", "all contexts", "everything". If user asks about a specific context by name (e.g., "show jots for payment-gateway"), use that context name. Use when user asks: "show jots", "list jots", "what jots do I have", "show recent jots", "show jots for X".',
+        description: 'List jots. Defaults to current context. Use "*" for all contexts.',
         inputSchema: {
           type: 'object',
           properties: {
             context: {
               type: 'string',
-              description:
-                'Context name or ID. Leave empty to use CURRENT context (auto-detected). Set to "*" or "all" only if user explicitly asks for all contexts.',
+              description: 'Context name or "*" for all (default: current)',
             },
             limit: {
               type: 'number',
-              description: 'Maximum number of jots to return (default: no limit)',
+              description: 'Max results',
             },
           },
         },
       },
       {
         name: 'search_jots',
-        description:
-          'Search jots with full-text search and filters. Use when user asks: "find jots about X", "search for X", "show jots matching X", "jots from last week", "jots tagged with X".',
+        description: 'Search jots with filters.',
         inputSchema: {
           type: 'object',
           properties: {
             query: {
               type: 'string',
-              description: 'Full-text search query - extract keywords from user request',
+              description: 'Search query',
             },
             context: {
               type: 'string',
-              description: 'Filter by context name or ID (optional)',
+              description: 'Filter by context',
             },
             tags: {
               type: 'array',
               items: { type: 'string' },
-              description: 'Filter by tags (optional)',
+              description: 'Filter by tags',
             },
             fromDate: {
               type: 'string',
-              description: 'ISO date string - show jots from this date (optional)',
+              description: 'ISO date (from)',
             },
             toDate: {
               type: 'string',
-              description: 'ISO date string - show jots until this date (optional)',
+              description: 'ISO date (to)',
             },
             includeExpired: {
               type: 'boolean',
-              description: 'Include expired jots (default: false)',
+              description: 'Include expired',
             },
             limit: {
               type: 'number',
-              description: 'Maximum number of results (optional)',
+              description: 'Max results',
             },
           },
         },
       },
       {
         name: 'delete_context',
-        description: 'Delete a context and all its jots',
+        description: 'Delete a context and all its jots.',
         inputSchema: {
           type: 'object',
           properties: {
             context: {
               type: 'string',
-              description: 'Context name or ID to delete',
+              description: 'Context name',
             },
           },
           required: ['context'],
@@ -164,13 +160,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: 'delete_jot',
-        description: 'Delete a specific jot by ID',
+        description: 'Delete a jot by ID.',
         inputSchema: {
           type: 'object',
           properties: {
             id: {
               type: 'string',
-              description: 'Jot ID to delete',
+              description: 'Jot ID',
             },
           },
           required: ['id'],
@@ -178,7 +174,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: 'cleanup_expired',
-        description: 'Remove all expired jots',
+        description: 'Remove expired jots.',
         inputSchema: {
           type: 'object',
           properties: {},
