@@ -167,7 +167,7 @@ export class JotRepository {
     if (options.query) {
       query = `SELECT DISTINCT j.id, j.context_id, j.message, j.created_at, j.expires_at
                FROM jots j
-               JOIN jots_fts fts ON j.id = fts.jot_id`;
+               JOIN jots_fts fts ON j.rowid = fts.rowid`;
       conditions.push('jots_fts MATCH ?');
       params.push(options.query);
     }

@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Comprehensive test suite with 63 tests covering all layers
+- GitHub Actions CI workflow testing on Node 18, 20, 22 across Linux, macOS, Windows
+- GitHub Actions release workflow for automated npm publishing
+- Test coverage for database, repository, service, and formatters
+
 ### Fixed
 - Fixed SQL queries referencing old `feature_id` column instead of `context_id` in full-text search
 - Fixed SQL queries in getExpiringSoon method using incorrect column name
+- Reduced MCP tool descriptions for lower token consumption
 
 ## [0.1.0] - 2025-10-27
 

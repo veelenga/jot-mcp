@@ -1,5 +1,8 @@
 # Jot MCP
 
+[![CI](https://github.com/veelenga/jot-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/veelenga/jot-mcp/actions/workflows/ci.yml)
+[![npm version](https://badge.fury.io/js/jot-mcp.svg)](https://www.npmjs.com/package/jot-mcp)
+
 > Lightweight MCP server for maintaining coding context across sessions
 
 Never lose your mental state when switching branches, taking breaks, or context-switching between features. Jot lets you naturally log what you're doing and retrieve it later through conversation with Claude Code.
@@ -252,12 +255,30 @@ npm install
 # Build the project
 npm run build
 
+# Run tests
+npm test
+
 # Watch mode for development
 npm run watch
 
 # Start the MCP server directly
 npm run dev
 ```
+
+### Testing
+
+The project includes comprehensive tests covering:
+- Database schema and initialization
+- Repository layer (CRUD operations, search, expiration)
+- Service layer (business logic, context detection)
+- Formatters (output rendering)
+
+Run tests with:
+```bash
+npm test
+```
+
+All tests run on Node.js 18+, across Linux, macOS, and Windows.
 
 
 ## 🤝 Contributing
