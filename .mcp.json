@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "jot": {
+      "command": "npx",
+      "args": ["-y", "jot-mcp"]
+    }
+  }
+}

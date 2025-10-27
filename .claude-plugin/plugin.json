@@ -1,0 +1,11 @@
+{
+  "name": "jot-mcp",
+  "description": "Lightweight MCP server for maintaining coding context across sessions",
+  "version": "0.1.0",
+  "author": {
+    "name": "veelenga",
+    "url": "https://github.com/veelenga"
+  },
+  "repository": "https://github.com/veelenga/jot-mcp.git",
+  "homepage": "https://github.com/veelenga/jot-mcp#readme"
+}

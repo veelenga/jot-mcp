@@ -17,19 +17,30 @@ Never lose your mental state when switching branches, taking breaks, or context-
 
 ## Quick Start
 
-### 1. Install
+### Option 1: Plugin Install (Recommended)
+
+One-click installation in Claude Code:
+
+```bash
+/plugin marketplace add veelenga/jot-mcp
+/plugin install jot-mcp
+```
+
+### Option 2: NPM Install
 
 ```bash
 npm install -g jot-mcp
 ```
 
-### 2. Configure Claude Code
+Then configure Claude Code:
 
 ```bash
 claude mcp add --scope user jot jot-mcp
 ```
 
 ## Usage
+
+### Natural Conversation
 
 Talk naturally with Claude Code:
 

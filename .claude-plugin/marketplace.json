@@ -1,0 +1,14 @@
+{
+  "name": "jot-mcp",
+  "owner": {
+    "name": "veelenga",
+    "url": "https://github.com/veelenga"
+  },
+  "plugins": [
+    {
+      "name": "jot-mcp",
+      "source": "./",
+      "description": "Lightweight MCP server for maintaining coding context across sessions"
+    }
+  ]
+}

@@ -9,6 +9,8 @@
   },
   "files": [
     "dist/**/*",
+    ".claude-plugin/**/*",
+    ".mcp.json",
     "README.md",
     "LICENSE"
   ],
