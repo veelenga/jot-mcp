@@ -8,42 +8,36 @@ import { Context, JotEntry } from './types.js';
 
 /**
  * Format a single jot entry for display
- * Optimized for Claude Code's MCP output rendering
+ * Minimal format - Claude will reformat for the user
+ * Using [ID] format to avoid auto-numbering confusion
  */
 export function formatJotEntry(
   jot: JotEntry,
-  index: number,
+  _index: number,
   showContext: boolean,
   contextName?: string
 ): string {
-  const date = new Date(jot.createdAt).toLocaleDateString();
-  const time = new Date(jot.createdAt).toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-  const isPermanent = jot.expiresAt === null;
+  const date = new Date(jot.createdAt).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
 
-  // Build single-line metadata
+  // Build compact metadata line
   const metadata: string[] = [];
   if (showContext && contextName) {
-    metadata.push(contextName);
+    metadata.push(`ctx:${contextName}`);
   }
   if (jot.tags.length > 0) {
-    metadata.push(`Tags: ${jot.tags.join(', ')}`);
+    metadata.push(`tags:${jot.tags.join(',')}`);
   }
-  metadata.push(`Created: ${date} ${time}`);
-  if (isPermanent) {
-    metadata.push('Permanent');
+  metadata.push(`created:${date}`);
+  if (jot.expiresAt === null) {
+    metadata.push('permanent');
   }
 
-  const metaLine = metadata.length > 0 ? `   - ${metadata.join(' | ')}` : '';
-
-  return `\n${index + 1}. ${jot.message}${metaLine}`;
+  return `[${jot.id}] ${jot.message}\n    ${metadata.join(' | ')}`;
 }
 
 /**
  * Format a list of jots with header and footer
- * Optimized for Claude Code's rendering
+ * Minimal format - Claude will reformat for the user
  */
 export function formatJotList(
   jots: JotEntry[],
@@ -52,7 +46,7 @@ export function formatJotList(
   getContextName: (contextId: string) => string | undefined
 ): string {
   if (jots.length === 0) {
-    return `${headerText}\n\nNo jots found.`;
+    return `${headerText}\nNo jots.`;
   }
 
   const lines = jots.map((jot, index) => {
@@ -60,53 +54,45 @@ export function formatJotList(
     return formatJotEntry(jot, index, showContext, contextName);
   });
 
-  const summary = `${jots.length} jot${jots.length !== 1 ? 's' : ''} in ${headerText.toLowerCase().replace(/^📍 current context: |^📁 context: |^📚 /, '')}`;
-
-  return `${headerText}\n${lines.join('\n\n')}\n\n${summary}`;
+  return `${headerText}\n\n${lines.join('\n')}\n\n${jots.length} jot${jots.length !== 1 ? 's' : ''}`;
 }
 
 /**
  * Format a single context entry for display
- * Optimized for Claude Code's rendering
+ * Minimal format - Claude will reformat for the user
  */
 export function formatContextEntry(
   context: Context,
-  index: number,
+  _index: number,
   isCurrent: boolean
 ): string {
-  const lastMod = new Date(context.lastModifiedAt).toLocaleDateString();
-  const lastModTime = new Date(context.lastModifiedAt).toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const lastMod = new Date(context.lastModifiedAt).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
+  const currentMarker = isCurrent ? ' *' : '';
 
-  const jotText = context.jotCount === 1 ? 'jot' : 'jots';
-  const currentMarker = isCurrent ? ' (current)' : '';
-
-  // Build metadata line
+  // Build compact metadata
   const metadata: string[] = [];
   if (context.repository) {
-    metadata.push(context.repository);
+    metadata.push(`repo:${context.repository}`);
   }
   if (context.branch) {
-    metadata.push(context.branch);
+    metadata.push(`branch:${context.branch}`);
   }
-  metadata.push(`${context.jotCount} ${jotText}`);
-  metadata.push(`Updated: ${lastMod} ${lastModTime}`);
+  metadata.push(`${context.jotCount}j`);
+  metadata.push(`updated:${lastMod}`);
 
-  return `\n${index + 1}. ${context.name}${currentMarker}\n   ${metadata.join(' | ')}`;
+  return `${context.name}${currentMarker}\n   ${metadata.join(' | ')}`;
 }
 
 /**
  * Format a list of contexts with header and footer
- * Optimized for Claude Code's rendering
+ * Minimal format - Claude will reformat for the user
  */
 export function formatContextList(
   contexts: Context[],
   currentContextName: string
 ): string {
   if (contexts.length === 0) {
-    return 'No contexts found yet.\n\nCreate your first jot to get started!';
+    return 'No contexts. Create a jot to start.';
   }
 
   const lines = contexts.map((context, index) => {
@@ -115,9 +101,8 @@ export function formatContextList(
   });
 
   const totalJots = contexts.reduce((sum, c) => sum + c.jotCount, 0);
-  const summary = `${contexts.length} context${contexts.length !== 1 ? 's' : ''}, ${totalJots} total jots`;
 
-  return `Your Contexts\n${lines.join('\n')}\n\n${summary}`;
+  return `Contexts (* = current)\n\n${lines.join('\n')}\n\n${contexts.length} context${contexts.length !== 1 ? 's' : ''}, ${totalJots} jots`;
 }
 
 /**

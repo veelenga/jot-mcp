@@ -159,6 +159,37 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
+        name: 'update_jot',
+        description: 'Update a jot by ID. Can update message, tags, metadata, or TTL.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              description: 'Jot ID',
+            },
+            message: {
+              type: 'string',
+              description: 'New message content (optional)',
+            },
+            ttlDays: {
+              type: 'number',
+              description: 'New TTL in days (optional, 0 = permanent)',
+            },
+            tags: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'New tags (optional, replaces existing)',
+            },
+            metadata: {
+              type: 'object',
+              description: 'New metadata (optional, replaces existing)',
+            },
+          },
+          required: ['id'],
+        },
+      },
+      {
         name: 'delete_jot',
         description: 'Delete a jot by ID.',
         inputSchema: {
@@ -208,6 +239,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         break;
       case 'delete_context':
         responseText = handlers.handleDeleteContext(args);
+        break;
+      case 'update_jot':
+        responseText = handlers.handleUpdateJot(args);
         break;
       case 'delete_jot':
         responseText = handlers.handleDeleteJot(args);
@@ -443,6 +477,27 @@ server.setRequestHandler(GetPromptRequestSchema, async (request) => {
  * Start the server
  */
 async function main() {
+  // Handle CLI arguments
+  const args = process.argv.slice(2);
+
+  if (args.includes('--version') || args.includes('-v')) {
+    console.log('0.1.0');
+    process.exit(0);
+  }
+
+  if (args.includes('--help') || args.includes('-h')) {
+    console.log(`
+jot-mcp v0.1.0
+Lightweight MCP server for maintaining coding context across sessions
+
+Usage:
+  jot-mcp              Start the MCP server
+  jot-mcp --version    Show version number
+  jot-mcp --help       Show this help message
+`);
+    process.exit(0);
+  }
+
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error('Jot MCP server running on stdio');

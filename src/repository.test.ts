@@ -148,6 +148,72 @@ describe('JotRepository', () => {
       assert.strictEqual(repository.getJot(jot.id), null);
     });
 
+    it('should update jot message', () => {
+      const jot = repository.createJot(contextId, 'original message', null, [], {});
+
+      const updated = repository.updateJot(jot.id, { message: 'updated message' });
+
+      assert.ok(updated);
+      assert.strictEqual(updated!.message, 'updated message');
+      assert.strictEqual(updated!.id, jot.id);
+    });
+
+    it('should update jot tags', () => {
+      const jot = repository.createJot(contextId, 'test', null, ['old-tag'], {});
+
+      const updated = repository.updateJot(jot.id, { tags: ['new-tag1', 'new-tag2'] });
+
+      assert.ok(updated);
+      assert.strictEqual(updated!.tags.length, 2);
+      assert.ok(updated!.tags.includes('new-tag1'));
+      assert.ok(updated!.tags.includes('new-tag2'));
+      assert.ok(!updated!.tags.includes('old-tag'));
+    });
+
+    it('should update jot expiration', () => {
+      const jot = repository.createJot(contextId, 'test', null, [], {});
+      const newExpiry = Date.now() + 5000000;
+
+      const updated = repository.updateJot(jot.id, { expiresAt: newExpiry });
+
+      assert.ok(updated);
+      assert.strictEqual(updated!.expiresAt, newExpiry);
+    });
+
+    it('should update jot metadata', () => {
+      const jot = repository.createJot(contextId, 'test', null, [], { old: 'value' });
+
+      const updated = repository.updateJot(jot.id, { metadata: { new: 'metadata' } });
+
+      assert.ok(updated);
+      assert.strictEqual(updated!.metadata.new, 'metadata');
+      assert.strictEqual(updated!.metadata.old, undefined);
+    });
+
+    it('should update multiple jot fields at once', () => {
+      const jot = repository.createJot(contextId, 'original', Date.now() + 1000000, ['tag1'], {});
+
+      const updated = repository.updateJot(jot.id, {
+        message: 'updated message',
+        expiresAt: null,
+        tags: ['new-tag'],
+        metadata: { key: 'value' },
+      });
+
+      assert.ok(updated);
+      assert.strictEqual(updated!.message, 'updated message');
+      assert.strictEqual(updated!.expiresAt, null);
+      assert.strictEqual(updated!.tags.length, 1);
+      assert.ok(updated!.tags.includes('new-tag'));
+      assert.strictEqual(updated!.metadata.key, 'value');
+    });
+
+    it('should return null when updating non-existent jot', () => {
+      const updated = repository.updateJot('non-existent-id', { message: 'test' });
+
+      assert.strictEqual(updated, null);
+    });
+
     it('should update context jot count', () => {
       repository.createJot(contextId, 'jot1', null, [], {});
       repository.createJot(contextId, 'jot2', null, [], {});

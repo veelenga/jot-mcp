@@ -4,11 +4,38 @@
  */
 
 import Database from 'better-sqlite3';
-import { randomUUID } from 'crypto';
 import { Context, JotEntry, SearchOptions } from './types.js';
 
 export class JotRepository {
   constructor(private db: Database.Database) {}
+
+  /**
+   * Generate a simple numeric ID by incrementing the counter
+   */
+  private generateNumericId(): string {
+    // Get all jots, filter numeric IDs, find max, and add 1
+    const jots = this.db.prepare('SELECT id FROM jots').all() as { id: string }[];
+    const numericIds = jots
+      .map(j => parseInt(j.id, 10))
+      .filter(id => !isNaN(id));
+
+    const maxId = numericIds.length > 0 ? Math.max(...numericIds) : 0;
+    return (maxId + 1).toString();
+  }
+
+  /**
+   * Generate a simple numeric context ID
+   */
+  private generateContextId(): string {
+    // Get all contexts, filter numeric IDs, find max, and add 1
+    const contexts = this.db.prepare('SELECT id FROM contexts').all() as { id: string }[];
+    const numericIds = contexts
+      .map(c => parseInt(c.id, 10))
+      .filter(id => !isNaN(id));
+
+    const maxId = numericIds.length > 0 ? Math.max(...numericIds) : 0;
+    return (maxId + 1).toString();
+  }
 
   /**
    * Create or get a context by name
@@ -19,7 +46,7 @@ export class JotRepository {
       return existing;
     }
 
-    const id = randomUUID();
+    const id = this.generateContextId();
     const now = Date.now();
 
     this.db
@@ -101,7 +128,7 @@ export class JotRepository {
     tags: string[],
     metadata: Record<string, string>
   ): JotEntry {
-    const id = randomUUID();
+    const id = this.generateNumericId();
     const now = Date.now();
 
     // Insert jot
@@ -130,6 +157,65 @@ export class JotRepository {
       .run(now, contextId);
 
     return this.getJot(id)!;
+  }
+
+  /**
+   * Update a jot entry
+   */
+  updateJot(
+    id: string,
+    updates: {
+      message?: string;
+      expiresAt?: number | null;
+      tags?: string[];
+      metadata?: Record<string, string>;
+    }
+  ): JotEntry | null {
+    const existing = this.getJot(id);
+    if (!existing) return null;
+
+    const now = Date.now();
+
+    // Update message and/or expiration
+    if (updates.message !== undefined || updates.expiresAt !== undefined) {
+      const message = updates.message !== undefined ? updates.message : existing.message;
+      const expiresAt = updates.expiresAt !== undefined ? updates.expiresAt : existing.expiresAt;
+
+      this.db
+        .prepare('UPDATE jots SET message = ?, expires_at = ? WHERE id = ?')
+        .run(message, expiresAt, id);
+    }
+
+    // Update tags if provided
+    if (updates.tags !== undefined) {
+      // Delete existing tags
+      this.db.prepare('DELETE FROM tags WHERE jot_id = ?').run(id);
+
+      // Insert new tags
+      const insertTag = this.db.prepare('INSERT INTO tags (jot_id, tag) VALUES (?, ?)');
+      for (const tag of updates.tags) {
+        insertTag.run(id, tag);
+      }
+    }
+
+    // Update metadata if provided
+    if (updates.metadata !== undefined) {
+      // Delete existing metadata
+      this.db.prepare('DELETE FROM metadata WHERE jot_id = ?').run(id);
+
+      // Insert new metadata
+      const insertMeta = this.db.prepare('INSERT INTO metadata (jot_id, key, value) VALUES (?, ?, ?)');
+      for (const [key, value] of Object.entries(updates.metadata)) {
+        insertMeta.run(id, key, value);
+      }
+    }
+
+    // Update context's last modified time
+    this.db
+      .prepare('UPDATE contexts SET last_modified_at = ? WHERE id = ?')
+      .run(now, existing.contextId);
+
+    return this.getJot(id);
   }
 
   /**

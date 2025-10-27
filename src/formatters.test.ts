@@ -24,8 +24,8 @@ describe('Formatters', () => {
 
       const formatted = formatJotEntry(jot, 0, false);
 
-      assert.ok(formatted.includes('1. Test message'));
-      assert.ok(formatted.includes('Created:'));
+      assert.ok(formatted.includes('[1] Test message'));
+      assert.ok(formatted.includes('created:'));
     });
 
     it('should format jot with tags', () => {
@@ -41,7 +41,8 @@ describe('Formatters', () => {
 
       const formatted = formatJotEntry(jot, 0, false);
 
-      assert.ok(formatted.includes('Tags: bug, urgent'));
+      assert.ok(formatted.includes('[1]'));
+      assert.ok(formatted.includes('tags:bug,urgent'));
     });
 
     it('should format permanent jot', () => {
@@ -57,7 +58,8 @@ describe('Formatters', () => {
 
       const formatted = formatJotEntry(jot, 0, false);
 
-      assert.ok(formatted.includes('Permanent'));
+      assert.ok(formatted.includes('[1]'));
+      assert.ok(formatted.includes('permanent'));
     });
 
     it('should show context when requested', () => {
@@ -73,15 +75,16 @@ describe('Formatters', () => {
 
       const formatted = formatJotEntry(jot, 0, true, 'my-context');
 
-      assert.ok(formatted.includes('my-context'));
+      assert.ok(formatted.includes('[1]'));
+      assert.ok(formatted.includes('ctx:my-context'));
     });
   });
 
   describe('formatJotList', () => {
     it('should format empty list', () => {
-      const formatted = formatJotList([], '📍 Current Context: test', false, () => undefined);
+      const formatted = formatJotList([], 'Context: test', false, () => undefined);
 
-      assert.ok(formatted.includes('No jots found'));
+      assert.ok(formatted.includes('No jots'));
     });
 
     it('should format list with jots', () => {
@@ -106,7 +109,7 @@ describe('Formatters', () => {
         },
       ];
 
-      const formatted = formatJotList(jots, '📍 Current Context: test', false, () => 'test');
+      const formatted = formatJotList(jots, 'Context: test', false, () => 'test');
 
       assert.ok(formatted.includes('Message 1'));
       assert.ok(formatted.includes('Message 2'));
@@ -126,9 +129,9 @@ describe('Formatters', () => {
         },
       ];
 
-      const formatted = formatJotList(jots, '📍 Current Context: test', false, () => 'test');
+      const formatted = formatJotList(jots, 'Context: test', false, () => 'test');
 
-      assert.ok(formatted.includes('1 jot in'));
+      assert.ok(formatted.includes('1 jot'));
       assert.ok(!formatted.includes('1 jots'));
     });
   });
@@ -148,9 +151,9 @@ describe('Formatters', () => {
       const formatted = formatContextEntry(context, 0, false);
 
       assert.ok(formatted.includes('my-context'));
-      assert.ok(formatted.includes('my-repo'));
-      assert.ok(formatted.includes('main'));
-      assert.ok(formatted.includes('5 jots'));
+      assert.ok(formatted.includes('repo:my-repo'));
+      assert.ok(formatted.includes('branch:main'));
+      assert.ok(formatted.includes('5j'));
     });
 
     it('should mark current context', () => {
@@ -166,7 +169,7 @@ describe('Formatters', () => {
 
       const formatted = formatContextEntry(context, 0, true);
 
-      assert.ok(formatted.includes('(current)'));
+      assert.ok(formatted.includes('my-context *'));
     });
 
     it('should use singular for single jot', () => {
@@ -182,8 +185,7 @@ describe('Formatters', () => {
 
       const formatted = formatContextEntry(context, 0, false);
 
-      assert.ok(formatted.includes('1 jot'));
-      assert.ok(!formatted.includes('1 jots'));
+      assert.ok(formatted.includes('1j'));
     });
   });
 
@@ -191,7 +193,7 @@ describe('Formatters', () => {
     it('should format empty context list', () => {
       const formatted = formatContextList([], '');
 
-      assert.ok(formatted.includes('No contexts found'));
+      assert.ok(formatted.includes('No contexts'));
     });
 
     it('should format context list', () => {
@@ -221,7 +223,7 @@ describe('Formatters', () => {
       assert.ok(formatted.includes('context1'));
       assert.ok(formatted.includes('context2'));
       assert.ok(formatted.includes('2 contexts'));
-      assert.ok(formatted.includes('8 total jots'));
+      assert.ok(formatted.includes('8 jots'));
     });
   });
 

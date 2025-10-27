@@ -168,6 +168,72 @@ describe('JotService', () => {
     });
   });
 
+  describe('Jot Update', () => {
+    it('should update jot message', () => {
+      const jot = service.createJot({ message: 'original message' });
+
+      const updated = service.updateJot(jot.id, { message: 'updated message' });
+
+      assert.ok(updated);
+      assert.strictEqual(updated!.message, 'updated message');
+      assert.strictEqual(updated!.id, jot.id);
+    });
+
+    it('should update jot TTL', () => {
+      const jot = service.createJot({ message: 'test', ttlDays: 14 });
+
+      const updated = service.updateJot(jot.id, { ttlDays: 0 }); // Make permanent
+
+      assert.ok(updated);
+      assert.strictEqual(updated!.expiresAt, null);
+    });
+
+    it('should update jot tags', () => {
+      const jot = service.createJot({ message: 'test', tags: ['old-tag'] });
+
+      const updated = service.updateJot(jot.id, { tags: ['new-tag1', 'new-tag2'] });
+
+      assert.ok(updated);
+      assert.strictEqual(updated!.tags.length, 2);
+      assert.ok(updated!.tags.includes('new-tag1'));
+      assert.ok(updated!.tags.includes('new-tag2'));
+    });
+
+    it('should update jot metadata', () => {
+      const jot = service.createJot({ message: 'test', metadata: { old: 'value' } });
+
+      const updated = service.updateJot(jot.id, { metadata: { new: 'metadata' } });
+
+      assert.ok(updated);
+      assert.strictEqual(updated!.metadata.new, 'metadata');
+      assert.strictEqual(updated!.metadata.old, undefined);
+    });
+
+    it('should update multiple fields at once', () => {
+      const jot = service.createJot({ message: 'original', ttlDays: 14, tags: ['tag1'] });
+
+      const updated = service.updateJot(jot.id, {
+        message: 'updated',
+        ttlDays: 0,
+        tags: ['new-tag'],
+        metadata: { key: 'value' },
+      });
+
+      assert.ok(updated);
+      assert.strictEqual(updated!.message, 'updated');
+      assert.strictEqual(updated!.expiresAt, null);
+      assert.strictEqual(updated!.tags.length, 1);
+      assert.ok(updated!.tags.includes('new-tag'));
+      assert.strictEqual(updated!.metadata.key, 'value');
+    });
+
+    it('should return null when updating non-existent jot', () => {
+      const updated = service.updateJot('non-existent-id', { message: 'test' });
+
+      assert.strictEqual(updated, null);
+    });
+  });
+
   describe('Jot Deletion', () => {
     it('should delete jot by id', () => {
       const jot = service.createJot({ message: 'test' });

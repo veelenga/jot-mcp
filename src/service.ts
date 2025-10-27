@@ -111,6 +111,42 @@ export class JotService {
   }
 
   /**
+   * Update a specific jot
+   */
+  updateJot(
+    id: string,
+    updates: {
+      message?: string;
+      ttlDays?: number | null;
+      tags?: string[];
+      metadata?: Record<string, string>;
+    }
+  ): JotEntry | null {
+    // Convert ttlDays to expiresAt if provided
+    const repoUpdates: {
+      message?: string;
+      expiresAt?: number | null;
+      tags?: string[];
+      metadata?: Record<string, string>;
+    } = {};
+
+    if (updates.message !== undefined) {
+      repoUpdates.message = updates.message;
+    }
+    if (updates.ttlDays !== undefined) {
+      repoUpdates.expiresAt = this.calculateExpiration(updates.ttlDays);
+    }
+    if (updates.tags !== undefined) {
+      repoUpdates.tags = updates.tags;
+    }
+    if (updates.metadata !== undefined) {
+      repoUpdates.metadata = updates.metadata;
+    }
+
+    return this.repository.updateJot(id, repoUpdates);
+  }
+
+  /**
    * Delete a specific jot
    */
   deleteJot(id: string): boolean {
@@ -176,7 +212,7 @@ export class JotService {
   /**
    * Calculate expiration timestamp
    */
-  private calculateExpiration(ttlDays?: number): number | null {
+  private calculateExpiration(ttlDays?: number | null): number | null {
     if (ttlDays === null || ttlDays === undefined) {
       // Use default TTL
       const days = DEFAULT_TTL_DAYS;
