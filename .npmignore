@@ -1,6 +1,7 @@
 # Source files
 src/
 tsconfig.json
+tsconfig.build.json
 
 # Development files
 .claude/
@@ -14,8 +15,10 @@ PUBLISHING.md
 # Git
 .git/
 .gitignore
+.github/
 
 # Tests
+__tests__/
 *.test.js
 *.test.ts
 
@@ -23,3 +26,4 @@ PUBLISHING.md
 .DS_Store
 *.sqlite
 *.sqlite-*
+CHANGELOG.md

@@ -1,6 +1,6 @@
 {
   "name": "jot-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Lightweight MCP server for maintaining coding context across sessions",
   "type": "module",
   "main": "dist/src/index.js",
@@ -15,7 +15,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
     "watch": "tsc --watch",
     "dev": "npm run build && node dist/src/index.js",
     "test": "node --test dist/__tests__/*.test.js",

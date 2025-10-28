@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2025-10-28
+
+### Changed
+- Exclude test files and source maps from production build
+
 ### Added
 - Comprehensive test suite with 63 tests covering all layers
 - GitHub Actions CI workflow testing on Node 18, 20, 22 across Linux, macOS, Windows
