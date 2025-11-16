@@ -16,17 +16,14 @@ Never lose your mental state when switching branches, taking breaks, or context-
 
 ### Option 1: Plugin Install (Recommended)
 
-In Claude Code, first add the marketplace:
+In Claude Code, add the marketplace and install the plugin:
 
 ```bash
 /plugin marketplace add veelenga/jot-mcp
+/plugin install jot-mcp@jot-mcp
 ```
 
-Then install the plugin:
-
-```bash
-/plugin install jot-mcp
-```
+Then restart Claude Code to activate the plugin.
 
 ### Option 2: NPM Install
 
